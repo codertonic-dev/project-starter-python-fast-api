@@ -1,0 +1,54 @@
+openapi: 3.0.3
+info:
+  title: Service API
+  version: 1.0.0
+  description: Contract-first FastAPI service
+servers:
+  - url: /api/v1
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /samples:
+    post:
+      operationId: createSample
+      summary: Create a new sample
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Sample'
+      responses:
+        '201':
+          description: Sample created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sample'
+        '400':
+          description: Invalid input
+components:
+  schemas:
+    Sample:
+      type: object
+      required: [name]
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          example: "Test Sample"

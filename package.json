@@ -1,0 +1,14 @@
+{
+    "name": "fastapi-contract-first",
+    "version": "1.0.0",
+    "scripts": {
+      "generate": "openapi-generator-cli generate -i openapi/specs/service.yaml -g python-fastapi -o generated --additional-properties=packageName=generated,hideGenerationTimestamp=true",
+      "validate-spec": "npx spectral lint openapi/specs/service.yaml",
+      "clean": "if exist generated rmdir /s /q generated",
+      "generate:full": "npm run clean && npm run generate"
+    },
+    "devDependencies": {
+      "@openapitools/openapi-generator-cli": "^2.13.4"
+    }
+  }
+  
