@@ -1,0 +1,5 @@
+generated/           # Generated code (regenerate on npm run generate)
+.venv/               # Virtual environment
+node_modules/        # Node dependencies
+__pycache__/         # Python cache
+.env                 # Secrets
