@@ -1,22 +1,26 @@
-SPEC_PATH=openapi/specs/service.yaml
-GENERATED_PATH=generated
-NPM_GENERATOR=openapi-generator-cli
+CONTRACT=contracts/openapi.yaml
+MODELS=app/models.py
 
-generate: clean-generated install-generator
-	npm run generate
+.PHONY: generate run install clean check lint typecheck format pre-commit
 
-validate-spec:
-	npx spectral lint $(SPEC_PATH)
+install:
+	python -m pip install --upgrade pip
+	pip install -r requirements.txt
+
+generate:
+	.venv/Scripts/datamodel-code-generator.exe --input $(CONTRACT) --input-file-type openapi --output $(MODELS)
+
+run:
+	uvicorn app.main:app --reload
+
+check:
+	python -c "import app.models" >nul && echo 'Models OK'
+
+lint:
+	flake8 app tests
+
+typecheck:
+	mypy app
 
 format:
-	npx black .
-	npx isort .
-
-clean-generated:
-	rm -rf $(GENERATED_PATH)
-	mkdir -p $(GENERATED_PATH)
-
-install-generator:
-	npm install -g $(NPM_GENERATOR)
-
-.PHONY: generate validate-spec format clean-generated install-generator
+	black app tests

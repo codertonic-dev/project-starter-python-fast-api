@@ -1,18 +1,17 @@
 openapi: 3.0.3
 info:
-  title: Service API
+  title: Contract First API
   version: 1.0.0
-  description: Contract-first FastAPI service
 servers:
   - url: /api/v1
 paths:
   /health:
     get:
       operationId: healthCheck
-      summary: Health check endpoint
+      summary: Health check
       responses:
         '200':
-          description: Service is healthy
+          description: OK
           content:
             application/json:
               schema:
@@ -21,34 +20,30 @@ paths:
                   status:
                     type: string
                     example: ok
-  /samples:
+  /persons:
     post:
-      operationId: createSample
-      summary: Create a new sample
+      operationId: createPerson
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Sample'
+              $ref: '#/components/schemas/PersonCreate'
       responses:
         '201':
-          description: Sample created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Sample'
-        '400':
-          description: Invalid input
+                $ref: '#/components/schemas/Person'
 components:
   schemas:
-    Sample:
+    Person:
       type: object
-      required: [name]
       properties:
-        id:
-          type: string
-          readOnly: true
-        name:
-          type: string
-          example: "Test Sample"
+        id: {type: string}
+        name: {type: string}
+        email: {type: string, format: email}
+    PersonCreate:
+      type: object
+      properties:
+        name: {type: string}
+        email: {type: string, format: email}

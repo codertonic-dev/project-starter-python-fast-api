@@ -1,14 +1,31 @@
 repos:
-  - repo: https://github.com/stoplightio/spectral
-    rev: v6.13.2
-    hooks:
-      - id: spectral-lint
-        files: ^openapi/specs/
-  - repo: https://github.com/psf/black-pre-commit
-    rev: 24.4.2
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
     hooks:
       - id: black
-  - repo: https://github.com/pycqa/isort
-    rev: v5.13.2
+        args: [app, tests]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.0
     hooks:
-      - id: isort
+      - id: flake8
+        additional_dependencies:
+          - flake8-simplify
+          - flake8-bugbear
+          - flake8-comprehensions
+          - flake8-fastapi
+          - flake8-pydantic
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic
+        args: [app]
+
+  - repo: https://github.com/pycqa/pylint
+    rev: v3.3.1
+    hooks:
+      - id: pylint
+        args: [app]
