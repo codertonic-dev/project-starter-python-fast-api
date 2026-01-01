@@ -6,3 +6,4 @@ class PersonService(ABC):
     async def create_person(self, data: PersonCreate) -> Person:
         """Create a new person entity."""
         raise NotImplementedError
+

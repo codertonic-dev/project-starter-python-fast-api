@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from app.models import PersonCreate, Person
-from app.services.base import PersonService
+from app.services.person_service import PersonService
 from app.services.persons_impl import PersonServiceImpl
 
 router = APIRouter()

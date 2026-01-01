@@ -1,5 +1,5 @@
 CONTRACT=contracts/openapi.yaml
-MODELS=app/company.py
+MODELS=app/models.py
 
 .PHONY: generate run install clean check lint typecheck format pre-commit
 
@@ -8,7 +8,7 @@ install:
 	pip install -r requirements.txt
 
 generate:
-	.venv\Scripts\datamodel-codegen.exe --input $(CONTRACT) --input-file-type openapi --output $(MODELS)
+	.venv/bin/datamodel-codegen --input $(CONTRACT) --input-file-type openapi --output $(MODELS)
 
 run:
 	uvicorn app.main:app --reload

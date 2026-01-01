@@ -1,185 +1,265 @@
 # FastAPI Contract-First Starter
 
-[![npm](https://img.shields.io/npm/v/@openapitools/openapi-generator-cli)](https://www.npmjs.com/package/@openapitools/openapi-generator-cli)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/github/license/your-org/fastapi-contract-first)](LICENSE)
 
-Contract-first FastAPI project starter using OpenAPI Generator. Define APIs in YAML spec → Generate server stubs → Implement business logic separately.
+Contract-first FastAPI project starter using datamodel-code-generator. Define APIs in YAML spec → Generate Pydantic models → Implement business logic with clean architecture.
 
 ## 🎯 Features
 
 - ✅ **Contract-First**: OpenAPI YAML as single source of truth
-- ✅ **Auto-Generated**: FastAPI routers + Pydantic models from spec
-- ✅ **Safe Regeneration**: Generated code isolated in `/generated`
-- ✅ **Cross-Platform**: Windows/Mac/Linux (npm + Java 21)
-- ✅ **Pre-commit**: Spec validation + formatting
-- ✅ **Production-Ready**: Type-safe, documented APIs
+- ✅ **Auto-Generated**: Pydantic models from spec
+- ✅ **Clean Architecture**: Service layer with dependency injection
+- ✅ **Cross-Platform**: Windows/Mac/Linux (Python + Make)
+- ✅ **Pre-commit**: Code formatting and linting
+- ✅ **Production-Ready**: Type-safe, documented APIs with unit tests
 
 ## 📁 Project Structure
 
-fastapi-contract-first/
-├── package.json # npm scripts (generate, validate)
-├── requirements.txt # Python deps
+```
+project-starter-python-fast-api/
+├── Makefile              # Build and development commands
+├── requirements.txt      # Python dependencies
+├── pytest.ini           # Pytest configuration
 ├── .pre-commit-config.yaml
-├── app/ # 🟢 Custom implementation (never regenerate)
-│ ├── main.py # App bootstrap + wiring
-│ ├── api/impl/ # 🔴 Business logic
-│ └── core/config.py
-├── generated/ # 🟡 Generated (delete + regenerate)
-│ ├── main.py
-│ ├── api/default/
-│ └── models/
-├── openapi/specs/ # 📄 API Contracts
-│ └── service.yaml
-└── tests/
-
+├── contracts/            # 📄 API Contracts
+│   └── openapi.yaml
+├── app/                  # 🟢 Custom implementation
+│   ├── main.py          # App bootstrap + routing
+│   ├── models.py        # 🟡 Generated Pydantic models
+│   ├── api/             # API route handlers
+│   │   ├── health.py
+│   │   └── persons.py
+│   └── services/        # Business logic layer
+│       ├── health_service.py
+│       ├── health_impl.py
+│       ├── person_service.py
+│       └── persons_impl.py
+└── tests/               # Unit tests
+    ├── test_health.py
+    └── test_persons.py
+```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-1. Python 3.11+
-python --version
+1. **Python 3.11+**
+   ```bash
+   python --version
+   ```
 
-2. Node.js + npm
-node -v # v20+
-npm -v # 10+
+### Setup
 
-3. Java 21+ (for OpenAPI Generator)
-java -version # openjdk 21+
-
-
-### Setup (Windows Command Prompt)
+```bash
+# Clone the repository
 git clone <repo>
-cd fastapi-contract-first
+cd project-starter-python-fast-api
 
-REM Node deps
-npm install
-
-REM Python virtualenv
+# Create virtual environment
 python -m venv .venv
+
+# Activate virtual environment
+# On macOS/Linux:
+source .venv/bin/activate
+# On Windows:
 .venv\Scripts\activate
 
-REM Python deps
+# Install dependencies
+make install
+# Or manually:
 pip install -r requirements.txt
 
-REM Generate API stubs
-npm run generate:full
+# Generate models from OpenAPI spec
+make generate
 
-REM Install pre-commit hooks
+# Install pre-commit hooks (optional)
 pre-commit install
 
-REM Run server
+# Run the server
+make run
+# Or manually:
 uvicorn app.main:app --reload
-
+```
 
 **Test:** `http://localhost:8000/api/v1/health` → `{"status": "ok"}`
 
 ## 🔄 Contract-First Workflow
 
-📝 Edit → openapi/specs/service.yaml
-
-✅ Validate → npm run validate-spec
-
-⚡ Generate → npm run generate:full
-
-💻 Implement → app/api/impl/*.py
-
-🧪 Test → pytest
-
-🚀 Run → uvicorn app.main:app --reload
-
-
+1. 📝 **Edit** → `contracts/openapi.yaml`
+2. ⚡ **Generate** → `make generate` (regenerates `app/models.py`)
+3. 💻 **Implement** → Add service interfaces in `app/services/*_service.py`
+4. 🔧 **Implement** → Add service implementations in `app/services/*_impl.py`
+5. 🛣️ **Wire** → Add API routes in `app/api/*.py`
+6. 🧪 **Test** → `pytest`
+7. 🚀 **Run** → `make run`
 
 ### Example: Add Person Entity
 
-**1. Edit spec** (`openapi/specs/service.yaml`):
+**1. Edit spec** (`contracts/openapi.yaml`):
+```yaml
 paths:
-/persons:
-post:
-operationId: createPerson
-...
+  /persons:
+    post:
+      operationId: createPerson
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+```
 
-**2. Regenerate**:
-npm run generate:full
+**2. Regenerate models:**
+```bash
+make generate
+```
 
-**3. Implement** (`app/api/impl/person.py`):
-def create_person(person: PersonCreate) -> Person:
-return Person(id="p-123", name=person.name, email=person.email)
+**3. Create service interface** (`app/services/person_service.py`):
+```python
+from abc import ABC, abstractmethod
+from app.models import PersonCreate, Person
 
-**4. Restart server** → New `/api/v1/persons` endpoint ready!
+class PersonService(ABC):
+    @abstractmethod
+    async def create_person(self, data: PersonCreate) -> Person:
+        raise NotImplementedError
+```
 
-## 📦 NPM Scripts
+**4. Implement service** (`app/services/persons_impl.py`):
+```python
+from app.services.person_service import PersonService
+from app.models import PersonCreate, Person
+
+class PersonServiceImpl(PersonService):
+    async def create_person(self, data: PersonCreate) -> Person:
+        # Your business logic here
+        return Person(id="p-123", **data.model_dump())
+```
+
+**5. Create API route** (`app/api/persons.py`):
+```python
+from fastapi import APIRouter, Depends
+from app.services.person_service import PersonService
+from app.services.persons_impl import PersonServiceImpl
+
+router = APIRouter()
+
+def get_person_service() -> PersonService:
+    return PersonServiceImpl()
+
+@router.post("/persons", response_model=Person, status_code=201)
+async def create_person_endpoint(
+    data: PersonCreate,
+    service: PersonService = Depends(get_person_service),
+) -> Person:
+    return await service.create_person(data)
+```
+
+**6. Register route** (`app/main.py`):
+```python
+from app.api.persons import router as persons_router
+app.include_router(persons_router, prefix="/api/v1")
+```
+
+## 📦 Make Commands
 
 | Command | Description |
 |---------|-------------|
-| `npm run generate:full` | Clean + generate API stubs |
-| `npm run generate` | Generate from spec |
-| `npm run clean` | Delete `/generated` |
-| `npm run validate-spec` | Lint OpenAPI YAML |
+| `make install` | Install Python dependencies |
+| `make generate` | Generate Pydantic models from OpenAPI spec |
+| `make run` | Start development server |
+| `make lint` | Run flake8 linter |
+| `make typecheck` | Run mypy type checker |
+| `make format` | Format code with Black |
+| `make check` | Verify models can be imported |
 
 ## 🐍 Python Commands
 
-.venv\Scripts\activate # Activate virtualenv
-pip install -r requirements.txt # Install deps
-uvicorn app.main:app --reload # Dev server
-pytest # Run tests
+```bash
+# Activate virtual environment
+source .venv/bin/activate  # macOS/Linux
+.venv\Scripts\activate     # Windows
 
-## 👥 Team Onboarding (Party, Company, etc.)
+# Install dependencies
+pip install -r requirements.txt
 
-1. **Copy starter** → `party-service/`, `company-service/`
-2. **Rename spec** → `openapi/specs/party.yaml`
-3. **Update contract** → Add domain endpoints
-4. **`npm run generate:full`** → Domain-specific stubs ready
-5. **Implement** → `app/api/impl/party.py`
+# Run development server
+uvicorn app.main:app --reload
+
+# Run tests
+pytest
+
+# Run tests with coverage
+pytest --cov=app tests/
+```
+
+## 🧪 Testing
+
+Run all tests:
+```bash
+pytest tests/ -v
+```
+
+Run specific test file:
+```bash
+pytest tests/test_persons.py -v
+```
+
+## 🛠 Developer Tooling
+
+- **Pre-commit**: Black, flake8, mypy, pylint
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
+- **Health check**: `http://localhost:8000/api/v1/health`
+- **Persons API**: `http://localhost:8000/api/v1/persons`
 
 ## ⚠️ Important Rules
 
 | ✅ DO | ❌ NEVER |
 |------|----------|
-| Edit `openapi/specs/*.yaml` | Edit `/generated/*` |
-| `npm run generate:full` | Hand-write FastAPI routes |
-| Implement in `app/api/impl/` | Commit generated code |
-| Use generated Pydantic models | Ignore spec validation |
-
-## 🛠 Developer Tooling
-
-- **Pre-commit**: Spectral linting, Black, isort
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
-- **Health checks**: `/api/v1/health`
+| Edit `contracts/openapi.yaml` | Edit `app/models.py` directly |
+| Run `make generate` after spec changes | Hand-write Pydantic models |
+| Implement in `app/services/` | Put business logic in API routes |
+| Use service interfaces | Skip dependency injection |
+| Write unit tests | Skip testing |
 
 ## 🔧 Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
-| `java` not found | `winget install EclipseAdoptium.Temurin.21.JDK` |
-| `npm` policy error | Use **Command Prompt** (not PowerShell) |
-| Spec validation | Add `description` to all responses |
-| `uvicorn` not found | `.venv\Scripts\activate` + `pip install "fastapi[standard]"` |
+| `datamodel-codegen` not found | Run `make install` or `pip install -r requirements.txt` |
+| `uvicorn` not found | Activate venv: `source .venv/bin/activate` |
+| Import errors | Run `make generate` to regenerate models |
+| Tests fail | Ensure `pytest` and `pytest-asyncio` are installed |
 
 ## 📄 Requirements
 
-**requirements.txt:**
-fastapi[standard]
-pydantic[email]
-httpx
-pytest
+Key dependencies:
+- `fastapi` - Web framework
+- `uvicorn[standard]` - ASGI server
+- `datamodel-code-generator` - Generate models from OpenAPI
+- `pydantic[email]` - Data validation
+- `pytest` & `pytest-asyncio` - Testing framework
+- `black`, `mypy`, `flake8` - Code quality tools
+
+See `requirements.txt` for full list.
 
 ## 🤝 Contributing
 
-1. Branch: `feat/person-endpoints`
-2. Update `openapi/specs/service.yaml`
-3. `npm run generate:full`
-4. Add tests → `pytest`
-5. `git commit` (pre-commit runs automatically)
-
-## 📈 Generated Clients
-
-Generate client SDKs from same spec:
-npm run generate:client # typescript-fetch
-npm run generate:client:go # go
-npm run generate:client:js # javascript
+1. Create branch: `feat/new-endpoint`
+2. Update `contracts/openapi.yaml`
+3. Run `make generate`
+4. Implement service interface and implementation
+5. Add API route
+6. Write unit tests
+7. Run `make lint` and `make typecheck`
+8. Commit (pre-commit runs automatically)
 
 ## License
 
