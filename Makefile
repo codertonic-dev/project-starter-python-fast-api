@@ -1,7 +1,7 @@
 CONTRACT=contracts/openapi.yaml
 MODELS=app/models.py
 
-.PHONY: generate run install clean check lint typecheck format pre-commit
+.PHONY: generate run install clean check lint typecheck format test pre-commit
 
 install:
 	python -m pip install --upgrade pip
@@ -24,3 +24,6 @@ typecheck:
 
 format:
 	black app tests
+
+test:
+	pytest tests/ -v
