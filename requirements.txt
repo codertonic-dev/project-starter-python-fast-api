@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+datamodel-code-generator
+pydantic[email]
+black
+mypy
+types-pyyaml
+pre-commit
+pylint
+flake8
+flake8-simplify
+flake8-bugbear
+flake8-comprehensions
+flake8-pydantic
+pytest
+pytest-asyncio
