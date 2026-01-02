@@ -15,3 +15,5 @@ flake8-pydantic
 sqlalchemy[asyncio]
 alembic
 asyncpg  # PostgreSQL (or aiosqlite for SQLite)
+pytest
+pytest-asyncio

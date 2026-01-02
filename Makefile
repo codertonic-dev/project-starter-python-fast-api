@@ -1,7 +1,7 @@
 CONTRACT=contracts/openapi.yaml
-MODELS=app/models.py
+MODELS=app/model.py
 
-.PHONY: install generate run check lint typecheck format clean dev
+.PHONY: install generate run check lint typecheck format test clean dev
 
 install:
 	python -m pip install --upgrade pip
@@ -12,6 +12,7 @@ generate:
 		--input $(CONTRACT) \
 		--input-file-type openapi \
 		--output $(MODELS)
+	.venv/bin/datamodel-codegen --input $(CONTRACT) --input-file-type openapi --output $(MODELS)
 
 run:
 	.venv/Scripts/uvicorn.exe app.main:app --reload --host 0.0.0.0 --port 8000
@@ -27,6 +28,9 @@ typecheck:
 
 format:
 	black app tests
+
+test:
+	pytest tests/ -v
 
 dev:
 	make install && make generate && make check && make run
