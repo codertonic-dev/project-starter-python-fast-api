@@ -1,26 +1,11 @@
 openapi: 3.0.3
 info:
-  title: Contract First API
+  title: Onboarding API
   version: 1.0.0
 servers:
   - url: /api/v1
 paths:
-  /health:
-    get:
-      operationId: healthCheck
-      summary: Health check
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
-  /persons:
+  /parties/people:
     post:
       operationId: createPerson
       requestBody:
@@ -33,17 +18,50 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Person'
+                $ref: '#/components/schemas/PersonResponse'
 components:
   schemas:
-    Person:
-      type: object
-      properties:
-        id: {type: string}
-        name: {type: string}
-        email: {type: string, format: email}
     PersonCreate:
       type: object
+      required: [first_name, last_name, email]
       properties:
-        name: {type: string}
-        email: {type: string, format: email}
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+    PersonResponse:
+      type: object
+      required: [id, first_name, last_name, email, party]
+      properties:
+        id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        party:
+          type: object
+          properties:
+            id:
+              type: string
+            display_name:
+              type: string
+            status:
+              type: string
+            party_type:
+              type: string

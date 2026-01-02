@@ -12,3 +12,6 @@ flake8-simplify
 flake8-bugbear
 flake8-comprehensions
 flake8-pydantic
+sqlalchemy[asyncio]
+alembic
+asyncpg  # PostgreSQL (or aiosqlite for SQLite)
