@@ -14,8 +14,15 @@ from app.database import engine
 async def lifespan(app: FastAPI):
     """Manage application lifespan events."""
     # Startup: Create database tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to connect to database: {e}")
+        logger.warning("Application will start but database operations may fail.")
+        logger.warning("Please set DATABASE_URL environment variable with correct credentials.")
     yield
     # Shutdown: Close database connections
     await engine.dispose()
@@ -81,5 +88,5 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="localhost", port=8000)
 

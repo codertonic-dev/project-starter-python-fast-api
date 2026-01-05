@@ -1,12 +1,28 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from typing import List
 from app.services.person_service import PersonService
 from app.models.database import PersonCreate, PersonUpdate, PersonResponse
 from app.models.errors import ErrorResponse
 from app.dependencies import get_db_session
 
 router = APIRouter(prefix="/parties/people", tags=["People"])
+
+
+@router.get("/", response_model=List[PersonResponse])
+async def list_people(
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """
+    List all active people.
+    
+    Returns a paginated list of all active people with their associated party details.
+    """
+    service = PersonService(db)
+    return await service.list_people(skip=skip, limit=limit)
 
 
 @router.post("/", response_model=PersonResponse, status_code=status.HTTP_201_CREATED)

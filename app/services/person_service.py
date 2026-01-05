@@ -1,6 +1,7 @@
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
+from sqlalchemy.orm import selectinload
+from typing import Optional, List
 from app.models.database import Party, Person, PersonCreate, PersonUpdate, PersonResponse, PartyOut
 
 class PersonService:
@@ -39,7 +40,12 @@ class PersonService:
         
         return PersonResponse(
             id=person.id,
-            party=PartyOut.model_validate(party),
+            party=PartyOut(
+                id=party.id,
+                party_type=party.party_type,
+                display_name=party.display_name,
+                status=party.status
+            ),
             first_name=person.first_name,
             last_name=person.last_name,
             date_of_birth=person.date_of_birth,
@@ -48,14 +54,55 @@ class PersonService:
             is_active=person.is_active
         )
     
+    async def list_people(self, skip: int = 0, limit: int = 100) -> List[PersonResponse]:
+        """List all active people with pagination."""
+        stmt = (
+            select(Person)
+            .where(Person.is_active == True)
+            .options(selectinload(Person.party))
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(stmt)
+        people = result.scalars().all()
+        
+        return [
+            PersonResponse(
+                id=person.id,
+                party=PartyOut(
+                    id=person.party.id,
+                    party_type=person.party.party_type,
+                    display_name=person.party.display_name,
+                    status=person.party.status
+                ),
+                first_name=person.first_name,
+                last_name=person.last_name,
+                date_of_birth=person.date_of_birth,
+                email=person.email,
+                phone=person.phone,
+                is_active=person.is_active
+            )
+            for person in people
+            if person.party
+        ]
+    
     async def get_person(self, person_id: str) -> Optional[PersonResponse]:
-        stmt = select(Person).where(Person.id == person_id, Person.is_active == True)
+        stmt = (
+            select(Person)
+            .where(Person.id == person_id, Person.is_active == True)
+            .options(selectinload(Person.party))
+        )
         result = await self.db.execute(stmt)
         person = result.scalar_one_or_none()
         if person and person.party:
             return PersonResponse(
                 id=person.id,
-                party=PartyOut.model_validate(person.party),
+                party=PartyOut(
+                    id=person.party.id,
+                    party_type=person.party.party_type,
+                    display_name=person.party.display_name,
+                    status=person.party.status
+                ),
                 first_name=person.first_name,
                 last_name=person.last_name,
                 date_of_birth=person.date_of_birth,
@@ -84,7 +131,11 @@ class PersonService:
                 raise ValueError("Email already exists")
         
         # Get person first to check if it exists and is active
-        person_stmt = select(Person).where(Person.id == person_id, Person.is_active == True)
+        person_stmt = (
+            select(Person)
+            .where(Person.id == person_id, Person.is_active == True)
+            .options(selectinload(Person.party))
+        )
         result = await self.db.execute(person_stmt)
         person = result.scalar_one_or_none()
         
@@ -102,7 +153,11 @@ class PersonService:
         # Update party display_name if names changed
         if 'first_name' in data or 'last_name' in data:
             # Re-fetch to get updated names
-            person_stmt = select(Person).where(Person.id == person_id)
+            person_stmt = (
+                select(Person)
+                .where(Person.id == person_id)
+                .options(selectinload(Person.party))
+            )
             result = await self.db.execute(person_stmt)
             person = result.scalar_one_or_none()
             if person and person.party:

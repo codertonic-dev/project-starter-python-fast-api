@@ -1,7 +1,7 @@
 CONTRACT=contracts/openapi.yaml
 MODELS=app/model.py
 
-.PHONY: install generate run check lint typecheck format test clean dev
+.PHONY: install generate run check lint typecheck format test clean dev seed
 
 install:
 	python -m pip install --upgrade pip
@@ -15,7 +15,7 @@ generate:
 	.venv/bin/datamodel-codegen --input $(CONTRACT) --input-file-type openapi --output $(MODELS)
 
 run:
-	.venv/Scripts/uvicorn.exe app.main:app --reload --host 0.0.0.0 --port 8000
+	.venv/Scripts/uvicorn.exe app.main:app --reload --host localhost --port 8000
 
 check:
 	python -c "import app.models; print('✅ Models OK')"
@@ -34,3 +34,6 @@ test:
 
 dev:
 	make install && make generate && make check && make run
+
+seed:
+	python scripts/seed_data.py
