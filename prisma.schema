@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Party {
+  id          String   @id @default(uuid())
+  party_type  String   @default("person")
+  display_name String
+  status      String   @default("active") // active, archived
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  person      Person?
+  
+  @@map("parties")
+}
+
+model Person {
+  id            String    @id @default(uuid())
+  party_id      String    @unique
+  first_name    String
+  last_name     String
+  date_of_birth DateTime? @db.Date
+  email         String    @unique
+  phone         String?
+  is_active     Boolean   @default(true)
+  
+  party         Party     @relation(fields: [party_id], references: [id], onDelete: Cascade)
+  
+  @@map("people")
+}
+

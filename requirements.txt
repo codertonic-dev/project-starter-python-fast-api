@@ -12,5 +12,11 @@ flake8-simplify
 flake8-bugbear
 flake8-comprehensions
 flake8-pydantic
+sqlalchemy[asyncio]
+alembic
+asyncpg  # PostgreSQL
+aiosqlite  # SQLite for testing
 pytest
 pytest-asyncio
+httpx
+python-dotenv
